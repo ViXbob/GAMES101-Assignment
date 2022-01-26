@@ -43,6 +43,11 @@ int main(){
     // matrix scalar multiply i * 2.0
     // matrix multiply i * j
     // matrix multiply vector i * v
+    std::cout << i + j << std::endl;
+    std::cout << i * 2.0 << std::endl;
+    std::cout << 3.0 * i << std::endl;
+    std::cout << i * j << std::endl;
+    std::cout << i * v << std::endl;
 
     return 0;
 }
