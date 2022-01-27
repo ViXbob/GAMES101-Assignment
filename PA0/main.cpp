@@ -53,7 +53,7 @@ int main(){
     Eigen::Vector3f u(2.0, 1.0, 1.0);
     double PI = acos(-1.0);
     Eigen::Matrix3f rotation, translate;
-    rotation << cos(PI / 4), sin(PI / 4), 0, -sin(PI / 4), cos(PI / 4), 0, 0, 0, 1.0;
+    rotation << cos(PI / 4), -sin(PI / 4), 0, sin(PI / 4), cos(PI / 4), 0, 0, 0, 1.0;
     translate << 1.0, 0, 1.0, 0, 1.0, 2.0, 0, 0, 1.0;
     std::cout << translate * rotation * u << std::endl;
     return 0;
