@@ -40,9 +40,21 @@ auto to_vec4(const Eigen::Vector3f& v3, float w = 1.0f)
 }
 
 
-static bool insideTriangle(int x, int y, const Vector3f* _v)
+static bool insideTriangle(float x, float y, const Vector3f* _v)
 {   
     // TODO : Implement this function to check if the point (x, y) is inside the triangle represented by _v[0], _v[1], _v[2]
+    Vector3f p = Vector3f(x, y, 0);
+    int flag = -1;
+    // std::cout << "-----------------------------" << std::endl;
+    // std::cout << p << std::endl;
+    for(int i = 0; i < 3; i++) {
+        // std::cout << _v[i] << std::endl;
+        Vector3f u1 = _v[(i + 1) % 3] - _v[i], u2 = p - _v[i];
+        bool now_flag = u1.cross(u2).z() < 0;
+        if(flag == -1) flag = now_flag;
+        else if(flag != now_flag) return false;
+    }
+    return true;
 }
 
 static std::tuple<float, float, float> computeBarycentric2D(float x, float y, const Vector3f* v)
@@ -80,7 +92,7 @@ void rst::rasterizer::draw(pos_buf_id pos_buffer, ind_buf_id ind_buffer, col_buf
         {
             vert.x() = 0.5*width*(vert.x()+1.0);
             vert.y() = 0.5*height*(vert.y()+1.0);
-            vert.z() = vert.z() * f1 + f2;
+            // vert.z() = vert.z() * f1 + f2;
         }
 
         for (int i = 0; i < 3; ++i)
@@ -107,13 +119,42 @@ void rst::rasterizer::rasterize_triangle(const Triangle& t) {
     auto v = t.toVector4();
     
     // TODO : Find out the bounding box of current triangle.
+    float max_x = std::numeric_limits<float>::min(), max_y = std::numeric_limits<float>::min();
+    float min_x = std::numeric_limits<float>::max(), min_y = std::numeric_limits<float>::max();
+    for(auto &p : v) {
+        max_x = std::max(max_x, p.x());
+        min_x = std::min(min_x, p.x());
+        max_y = std::max(max_y, p.y());
+        min_y = std::min(min_y, p.y());
+        // std::cout << p << std::endl;
+    }
+    int max_x_int = ceil(max_x), max_y_int = ceil(max_y);
+    int min_x_int = floor(min_x), min_y_int = floor(min_y);
+    // std::cout << max_x_int << " " << min_x_int << std::endl;
+    // std::cout << max_y_int << " " << min_y_int << std::endl;
     // iterate through the pixel and find if the current pixel is inside the triangle
-
-    // If so, use the following code to get the interpolated z value.
-    //auto[alpha, beta, gamma] = computeBarycentric2D(x, y, t.v);
-    //float w_reciprocal = 1.0/(alpha / v[0].w() + beta / v[1].w() + gamma / v[2].w());
-    //float z_interpolated = alpha * v[0].z() / v[0].w() + beta * v[1].z() / v[1].w() + gamma * v[2].z() / v[2].w();
-    //z_interpolated *= w_reciprocal;
+    for(int x = min_x_int; x <= max_x_int; x++) {
+        for(int y = min_y_int; y <= max_y_int; y++) {
+            for(int i = 0; i < n; i++) {
+                for(int j = 0; j < n; j++) {
+                    if(insideTriangle(float(x) + (float(i) + 0.5) / n, float(y) + (float(j) + 0.5) / n, t.v)) {
+                        // If so, use the following code to get the interpolated z value.
+                        auto [alpha, beta, gamma] = computeBarycentric2D(float(x) + 0.5, float(y) + 0.5, t.v);
+                        float w_reciprocal = 1.0/(alpha / v[0].w() + beta / v[1].w() + gamma / v[2].w());
+                        float z_interpolated = alpha * v[0].z() / v[0].w() + beta * v[1].z() / v[1].w() + gamma * v[2].z() / v[2].w();
+                        z_interpolated *= w_reciprocal;
+                        // z_interpolated = -fabs(z_interpolated);
+                        // std::cout << z_interpolated << std::endl;
+                        int index = get_index(x, y), mass_index = i * n + j;
+                        if(z_interpolated > depth_buf[index][mass_index] && z_interpolated <= 0) {
+                            depth_buf[index][mass_index] = z_interpolated;
+                            frame_buf[index] += t.getColor() / (n * n);
+                        }
+                    }
+                }
+            }
+        }
+    }
 
     // TODO : set the current pixel (use the set_pixel function) to the color of the triangle (use getColor function) if it should be painted.
 }
@@ -141,7 +182,8 @@ void rst::rasterizer::clear(rst::Buffers buff)
     }
     if ((buff & rst::Buffers::Depth) == rst::Buffers::Depth)
     {
-        std::fill(depth_buf.begin(), depth_buf.end(), std::numeric_limits<float>::infinity());
+        std::vector<float> tmp(n * n, -std::numeric_limits<float>::infinity());
+        std::fill(depth_buf.begin(), depth_buf.end(), tmp);
     }
 }
 
