@@ -1,26 +1,14 @@
 # GAMES101-Assignment
 GAMES101-Assignments
 
-## Assigment1
+Current assignment progress: 3/8
 
-### Without rotation and camera at (0, 0, 5)
+Mainpage: https://sites.cs.ucsb.edu/~lingqi/teaching/games101.html
 
-![1-1](/images/1-1.png)
+Video: https://www.bilibili.com/video/BV1X7411F744
 
-### Rotate 80 degrees along (1, 0, 0) and camera at (0, 0, 10)
+Assigment: http://games-cn.org/forums/topic/allhw/
 
-![1-2](/images/1-2.png)
+BBS: http://games-cn.org/forums/forum/graphics-intro/
 
-## Assigment2
-
-### Without MASS
-
-![2-1](/images/2-1.png)
-
-### MASS with n = 2
-
-![2-2](/images/2-2.png)
-
-### MASS with n = 4
-
-![2-2](/images/2-3.png)
+PS: Results of each assigment is under the corresponding directory.
