@@ -86,3 +86,6 @@ Time taken: 0 hours
 
 ![naive](images/normal.png)
 
+## Reference
+
+1. [Computer Graphics CMU 15-462/15-662, Fall 2015 Lecture 10](http://15462.courses.cs.cmu.edu/fall2015/lecture/acceleration/slide_000)
