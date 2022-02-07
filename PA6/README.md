@@ -48,7 +48,7 @@ Time taken: 0 hours
 
 #### Advanced Optimization of `BVHAccel::getIntersection`
 
-Utilize global best intersection pruning.
+Use the global optimal solution to prune
 
 ```
 BVH Generation complete: 
