@@ -98,7 +98,8 @@ Intersection BVHAccel::Intersect(const Ray& ray) const
     Intersection isect;
     if (!root)
         return isect;
-    isect = BVHAccel::getIntersection(root, ray);
+    auto [flag, t_enter] = root -> bounds.IntersectWithTime(ray, ray.direction_inv, ray.dirIsNeg);
+    if(flag) isect = BVHAccel::getIntersection(root, ray);
     return isect;
 }
 
@@ -107,28 +108,56 @@ Intersection BVHAccel::getIntersection(BVHBuildNode* node, const Ray& ray) const
     // TODO Traverse the BVH to find intersection
     Intersection inter;
     if(!node) return inter;
-    std::array<int, 3> dirIsNeg;
-    for(int i = 0; i < 3; i++) dirIsNeg[i] = int(ray.direction[i] > 0);
-    bool flag = node -> bounds.IntersectP(ray, ray.direction_inv, dirIsNeg);
     if(node -> object) {
-        if(!flag) {
-            // auto tmp = node -> object -> getIntersection(ray);
-            // if(tmp.happened) {
-            //     std::cout << tmp.coords << std::endl;
-            //     std::cout << node -> object -> getBounds().pMin << std::endl;
-            //     std::cout << node -> object -> getBounds().pMax << std::endl;
-            //     std::cout << tmp.happened << std::endl;
-            // }
-            return inter;
-        }
         inter = node -> object -> getIntersection(ray);
         return inter;
     }
 
-    if(flag) {
-        Intersection l = getIntersection(node -> left, ray);
-        Intersection r = getIntersection(node -> right, ray);
-        return l.distance < r.distance ? l : r;
+    auto [flag_l, t_enter_l] = node -> left -> bounds.IntersectWithTime(ray, ray.direction_inv, ray.dirIsNeg);
+    auto [flag_r, t_enter_r] = node -> right -> bounds.IntersectWithTime(ray, ray.direction_inv, ray.dirIsNeg);
+    if(t_enter_l < t_enter_r) {
+        if(flag_l) inter = getIntersection(node -> left, ray);
+        if(flag_r && t_enter_r < inter.distance) {
+            Intersection r = getIntersection(node -> right, ray);
+            if(inter.distance > r.distance) inter = r;
+        }
+    } else {
+        if(flag_r) inter = getIntersection(node -> right, ray);
+        if(flag_l && t_enter_l < inter.distance) {
+            Intersection l = getIntersection(node -> left, ray);
+            if(inter.distance > l.distance) inter = l;
+        }
     }
     return inter;
 }
+
+// Intersection BVHAccel::getIntersection(BVHBuildNode* node, const Ray& ray) const
+// {
+//     // TODO Traverse the BVH to find intersection
+//     Intersection inter;
+//     if(!node) return inter;
+//     std::array<int, 3> dirIsNeg;
+//     for(int i = 0; i < 3; i++) dirIsNeg[i] = int(ray.direction[i] > 0);
+//     bool flag = node -> bounds.IntersectP(ray, ray.direction_inv, dirIsNeg);
+//     if(node -> object) {
+//         if(!flag) {
+//             // auto tmp = node -> object -> getIntersection(ray);
+//             // if(tmp.happened) {
+//             //     std::cout << tmp.coords << std::endl;
+//             //     std::cout << node -> object -> getBounds().pMin << std::endl;
+//             //     std::cout << node -> object -> getBounds().pMax << std::endl;
+//             //     std::cout << tmp.happened << std::endl;
+//             // }
+//             return inter;
+//         }
+//         inter = node -> object -> getIntersection(ray);
+//         return inter;
+//     }
+
+//     if(flag) {
+//         Intersection l = getIntersection(node -> left, ray);
+//         Intersection r = getIntersection(node -> right, ray);
+//         return l.distance < r.distance ? l : r;
+//     }
+//     return inter;
+// }
