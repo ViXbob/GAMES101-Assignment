@@ -25,7 +25,7 @@ Time taken: 0 hours
           : 6 seconds
 ```
 
-### Optimization of `BVHAccel::getIntersection`
+#### Optimization of `BVHAccel::getIntersection`
 
 Recur the child whose `t_enter` of its bound is smaller first. 
 
@@ -44,6 +44,25 @@ Render complete: ======================================================] 100 %
 Time taken: 0 hours
           : 0 minutes
           : 5 seconds
+```
+
+#### Advanced Optimization of `BVHAccel::getIntersection`
+
+Utilize global best intersection pruning.
+
+```
+BVH Generation complete: 
+Time Taken: 0 hrs, 0 mins, 1 secs
+
+ - Generating BVH...
+
+BVH Generation complete: 
+Time Taken: 0 hrs, 0 mins, 0 secs
+
+Render complete: ======================================================] 100 %
+Time taken: 0 hours
+          : 0 minutes
+          : 4 seconds
 ```
 
 ### Rendering Result

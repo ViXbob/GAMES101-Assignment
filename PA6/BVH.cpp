@@ -98,8 +98,9 @@ Intersection BVHAccel::Intersect(const Ray& ray) const
     Intersection isect;
     if (!root)
         return isect;
-    auto [flag, t_enter] = root -> bounds.IntersectWithTime(ray, ray.direction_inv, ray.dirIsNeg);
-    if(flag) isect = BVHAccel::getIntersection(root, ray);
+    // auto [flag, t_enter] = root -> bounds.IntersectWithTime(ray, ray.direction_inv, ray.dirIsNeg);
+    // if(flag) isect = BVHAccel::getIntersection(root, ray);
+    getIntersection(root, ray, isect);
     return isect;
 }
 
@@ -129,6 +130,25 @@ Intersection BVHAccel::getIntersection(BVHBuildNode* node, const Ray& ray) const
         }
     }
     return inter;
+}
+
+void BVHAccel::getIntersection(BVHBuildNode* node, const Ray& ray, Intersection& optimal) const {
+    if(!node) return;
+    if(node -> object) {
+        auto inter = node -> object -> getIntersection(ray);
+        if(inter.distance < optimal.distance) optimal = inter;
+        return;
+    }
+    BVHBuildNode *l = node -> left, *r = node -> right;
+    auto [flag_l, t_enter_l] = l -> bounds.IntersectWithTime(ray, ray.direction_inv, ray.dirIsNeg);
+    auto [flag_r, t_enter_r] = r -> bounds.IntersectWithTime(ray, ray.direction_inv, ray.dirIsNeg);
+    if(t_enter_l > t_enter_r) {
+        std::swap(flag_l, flag_r);
+        std::swap(t_enter_l, t_enter_r);
+        std::swap(l, r);
+    }
+    if(flag_l && t_enter_l < optimal.distance) getIntersection(l, ray, optimal);
+    if(flag_r && t_enter_r < optimal.distance) getIntersection(r, ray, optimal); 
 }
 
 // Intersection BVHAccel::getIntersection(BVHBuildNode* node, const Ray& ray) const

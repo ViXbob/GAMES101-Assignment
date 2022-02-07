@@ -34,6 +34,7 @@ public:
 
     Intersection Intersect(const Ray &ray) const;
     Intersection getIntersection(BVHBuildNode* node, const Ray& ray)const;
+    void getIntersection(BVHBuildNode* node, const Ray& ray, Intersection& optimal) const;
     bool IntersectP(const Ray &ray) const;
     BVHBuildNode* root;
 
