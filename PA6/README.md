@@ -65,6 +65,23 @@ Time taken: 0 hours
           : 4 seconds
 ```
 
+#### Advanced Optimization SAH(B = 32)
+
+```
+BVH Generation complete: 
+Time Taken: 0 hrs, 0 mins, 1 secs
+
+ - Generating BVH...
+
+BVH Generation complete: 
+Time Taken: 0 hrs, 0 mins, 0 secs
+
+Render complete: ======================================================] 100 %
+Time taken: 0 hours
+          : 0 minutes
+          : 3 seconds
+```
+
 ### Rendering Result
 
 ![naive](images/normal.png)
