@@ -91,7 +91,28 @@ class Bounds3
                        const std::array<int, 3>& dirisNeg) const;
 };
 
+// I do not understand the differences between the two spellings!
 
+// inline bool Bounds3::IntersectP(const Ray& ray, const Vector3f& invDir,
+//                                 const std::array<int, 3>& dirIsNeg) const
+// {
+//     // invDir: ray direction(x,y,z), invDir=(1.0/x,1.0/y,1.0/z), use this because Multiply is faster that Division
+//     // dirIsNeg: ray direction(x,y,z), dirIsNeg=[int(x>0),int(y>0),int(z>0)], use this to simplify your logic
+//     // TODO test if ray bound intersects
+//     float inf = std::numeric_limits<float>::infinity();
+//     float t_l = -inf, t_r = inf;
+//     for(int i = 0; i < 3; i++) {
+//         float tmp_t_l = (pMin[i] - ray.origin[i]) * invDir[i];
+//         float tmp_t_r = (pMax[i] - ray.origin[i]) * invDir[i];
+//         if(!dirIsNeg[i]) std::swap(tmp_t_l, tmp_t_r);
+//         if(tmp_t_l > tmp_t_r) return false;
+//         t_l = std::max(t_l, tmp_t_l);
+//         t_r = std::min(t_r, tmp_t_r);
+//     }
+//     if(t_l > t_r) return false;
+//     if(t_r < 0) return false;
+//     return true;
+// }
 
 inline bool Bounds3::IntersectP(const Ray& ray, const Vector3f& invDir,
                                 const std::array<int, 3>& dirIsNeg) const
@@ -99,20 +120,37 @@ inline bool Bounds3::IntersectP(const Ray& ray, const Vector3f& invDir,
     // invDir: ray direction(x,y,z), invDir=(1.0/x,1.0/y,1.0/z), use this because Multiply is faster that Division
     // dirIsNeg: ray direction(x,y,z), dirIsNeg=[int(x>0),int(y>0),int(z>0)], use this to simplify your logic
     // TODO test if ray bound intersects
-    float inf = std::numeric_limits<float>::infinity();
-    float t_l = -inf, t_r = inf;
-    for(int i = 0; i < 3; i++) {
-        float tmp_t_l = (pMin[i] - ray.origin[i]) * invDir[i];
-        float tmp_t_r = (pMax[i] - ray.origin[i]) * invDir[i];
-        if(!dirIsNeg[i]) std::swap(tmp_t_l, tmp_t_r);
-        if(tmp_t_l > tmp_t_r) return false;
-        t_l = std::max(t_l, tmp_t_l);
-        t_r = std::min(t_r, tmp_t_r);
-    }
-    if(t_l > t_r) return false;
-    if(t_r < 0) return false;
-    return true;
+    auto t0 = (pMin - ray.origin) * invDir;
+    auto t1 = (pMax - ray.origin) * invDir;
+
+    auto v0 = Vector3f(std::min(t0.x, t1.x), std::min(t0.y, t1.y), std::min(t0.z, t1.z));
+    auto v1 = Vector3f(std::max(t0.x, t1.x), std::max(t0.y, t1.y), std::max(t0.z, t1.z));
+
+    float tenter = std::max(v0.x, std::max(v0.y, v0.z));
+    float texit = std::min(v1.x, std::min(v1.y, v1.z));
+    return tenter <= texit && texit > 0; 
 }
+
+// inline std::pair<bool, float> Bounds3::IntersectWithTime(const Ray& ray, const Vector3f& invDir,
+//                            const std::array<int, 3>& dirIsNeg) const
+// {
+//     // invDir: ray direction(x,y,z), invDir=(1.0/x,1.0/y,1.0/z), use this because Multiply is faster that Division
+//     // dirIsNeg: ray direction(x,y,z), dirIsNeg=[int(x>0),int(y>0),int(z>0)], use this to simplify your logic
+//     // TODO test if ray bound intersects
+//     float inf = std::numeric_limits<float>::infinity();
+//     float t_l = -inf, t_r = inf;
+//     for(int i = 0; i < 3; i++) {
+//         float tmp_t_l = (pMin[i] - ray.origin[i]) * invDir[i];
+//         float tmp_t_r = (pMax[i] - ray.origin[i]) * invDir[i];
+//         if(!dirIsNeg[i]) std::swap(tmp_t_l, tmp_t_r);
+//         if(tmp_t_l > tmp_t_r) return {false, inf};
+//         t_l = std::max(t_l, tmp_t_l);
+//         t_r = std::min(t_r, tmp_t_r);
+//     }
+//     if(t_l > t_r) return {false, inf};
+//     if(t_r < 0) return {false, inf};
+//     return {true, t_l};
+// }
 
 inline std::pair<bool, float> Bounds3::IntersectWithTime(const Ray& ray, const Vector3f& invDir,
                            const std::array<int, 3>& dirIsNeg) const
@@ -120,19 +158,16 @@ inline std::pair<bool, float> Bounds3::IntersectWithTime(const Ray& ray, const V
     // invDir: ray direction(x,y,z), invDir=(1.0/x,1.0/y,1.0/z), use this because Multiply is faster that Division
     // dirIsNeg: ray direction(x,y,z), dirIsNeg=[int(x>0),int(y>0),int(z>0)], use this to simplify your logic
     // TODO test if ray bound intersects
-    float inf = std::numeric_limits<float>::infinity();
-    float t_l = -inf, t_r = inf;
-    for(int i = 0; i < 3; i++) {
-        float tmp_t_l = (pMin[i] - ray.origin[i]) * invDir[i];
-        float tmp_t_r = (pMax[i] - ray.origin[i]) * invDir[i];
-        if(!dirIsNeg[i]) std::swap(tmp_t_l, tmp_t_r);
-        if(tmp_t_l > tmp_t_r) return {false, inf};
-        t_l = std::max(t_l, tmp_t_l);
-        t_r = std::min(t_r, tmp_t_r);
-    }
-    if(t_l > t_r) return {false, inf};
-    if(t_r < 0) return {false, inf};
-    return {true, t_l};
+    auto t0 = (pMin - ray.origin) * invDir;
+    auto t1 = (pMax - ray.origin) * invDir;
+
+    auto v0 = Vector3f(std::min(t0.x, t1.x), std::min(t0.y, t1.y), std::min(t0.z, t1.z));
+    auto v1 = Vector3f(std::max(t0.x, t1.x), std::max(t0.y, t1.y), std::max(t0.z, t1.z));
+
+    float tenter = std::max(v0.x, std::max(v0.y, v0.z));
+    float texit = std::min(v1.x, std::min(v1.y, v1.z));
+    bool flag = tenter <= texit && texit > 0;
+    return {flag, flag ? tenter : std::numeric_limits<float>::infinity()}; 
 }
 
 inline Bounds3 Union(const Bounds3& b1, const Bounds3& b2)

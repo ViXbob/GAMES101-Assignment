@@ -68,7 +68,6 @@ Vector3f Scene::castRay(const Ray &ray, int depth) const
         if(depth == 0) return x.emit;
         else return Vector3f(0.0, 0.0, 0.0);
     }
-    // std::cout << "Do not emit" << std::endl;
     Vector3f wo = -normalize(ray.direction);
     Vector3f normal = x.normal.normalized();
     Vector3f p = x.coords;
@@ -83,19 +82,12 @@ Vector3f Scene::castRay(const Ray &ray, int depth) const
         Vector3f light_p = x_prime.coords;
         Ray light_ray(p, wi);
         Intersection mid = intersect(light_ray);
-        if((mid.coords - x_prime.coords).norm() < EPSILON && mid.happened) {
+        // epsilon should not be too small, 
+        // otherwise it will lead to misjudgment that there is occlusion between the light source and the object
+        // epsilon is set 0.01
+        if((mid.coords - light_p).norm() < 0.01) {
             float dist2 = dotProduct((light_p - p), (light_p - p));
-            // if(dist2 > EPSILON && fabs(pdf_light) > EPSILON) {
-                // std::cout << "x_prime.emit" << std::endl;
-                // std::cout << x_prime.emit << std::endl;
-                // std::cout << x.m->eval(wi, wo, x.normal) << std::endl;
-                // std::cout << x.normal << std::endl;
-                // std::cout << x_prime.normal << std::endl;
-                // std::cout << dotProduct(wi, x.normal) << ", " << dotProduct(-wi, x_prime.normal) << ", " << dist2 * pdf_light << std::endl;
-                // std::cout << dist2 << ", " << pdf_light << std::endl;
             L_dir = x_prime.emit * x.m->eval(wi, wo, normal) * dotProduct(wi, normal) * dotProduct(-wi, light_normal) / (dist2 * pdf_light);
-                // std::cout << "L_dir : " << L_dir << std::endl;
-            // }
         }
     }
 
@@ -104,13 +96,6 @@ Vector3f Scene::castRay(const Ray &ray, int depth) const
         if(get_random_float() < RussianRoulette) {
             Vector3f wi = x.m->sample(wo, x.normal).normalized();
             Ray light_ray = Ray(p, wi);
-            // mid = intersect(light_ray);
-            // if(mid.happened) {
-            //     if(!mid.m->hasEmission()) {
-            //         L_indir = castRay(light_ray, depth + 1) * x.m->eval(wi, wo, x.normal) * dotProduct(wi, x.normal) / 
-            //                     (x.m->pdf(wo, wi, x.normal) * RussianRoulette);
-            //     }
-            // }
             L_indir = castRay(light_ray, depth + 1) * x.m->eval(wi, wo, normal) * dotProduct(wi, normal) / 
                         (x.m->pdf(wi, wo, normal) * RussianRoulette);
         }
