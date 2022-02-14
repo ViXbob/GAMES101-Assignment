@@ -3,6 +3,9 @@
 //
 
 #include <fstream>
+#include <atomic>
+#include <thread>
+#include <mutex>
 #include "Scene.hpp"
 #include "Renderer.hpp"
 
@@ -21,26 +24,46 @@ void Renderer::Render(const Scene& scene)
     float scale = tan(deg2rad(scene.fov * 0.5));
     float imageAspectRatio = scene.width / (float)scene.height;
     Vector3f eye_pos(278, 273, -800);
-    int m = 0;
+    std::atomic<int> m = 0;
+    std::mutex mut;
 
     // change the spp value to change sample ammount
-    int spp = 16;
+    int spp = 256;
     std::cout << "SPP: " << spp << "\n";
-    for (uint32_t j = 0; j < scene.height; ++j) {
-        for (uint32_t i = 0; i < scene.width; ++i) {
-            // generate primary ray direction
-            float x = (2 * (i + 0.5) / (float)scene.width - 1) *
-                      imageAspectRatio * scale;
-            float y = (1 - 2 * (j + 0.5) / (float)scene.height) * scale;
-
-            Vector3f dir = normalize(Vector3f(-x, y, 1));
-            for (int k = 0; k < spp; k++){
-                framebuffer[m] += scene.castRay(Ray(eye_pos, dir), 0) / spp;  
+    auto deal = [&](int lx, int rx, int ly, int ry) -> void {
+        for (uint32_t j = ly; j < ry; ++j) {
+            for (uint32_t i = lx; i < rx; ++i) {
+                // generate primary ray direction
+                int index = j * scene.width + i;
+                for (int k = 0; k < spp; k++){
+                    float x = (2 * (i + get_random_float()) / (float)scene.width - 1) *
+                            imageAspectRatio * scale;
+                    float y = (1 - 2 * (j + get_random_float()) / (float)scene.height) * scale;
+                    Vector3f dir = normalize(Vector3f(-x, y, 1));
+                    framebuffer[index] += scene.castRay(Ray(eye_pos, dir), 0) / spp;
+                }
             }
-            m++;
+            m += rx - lx;
+            {
+                std::lock_guard<std::mutex> lock(mut);
+                UpdateProgress(m / ((float)scene.height * scene.width));
+            }
         }
-        UpdateProgress(j / (float)scene.height);
+    };
+
+    int x_base = 5, y_base = 5, con = 0;
+    int x_step = ceil(double(scene.width) / x_base), y_step = ceil(double(scene.height) / y_base);
+    std::thread thd[x_base * y_base];
+    for(int i = 0; i < x_base; i++) {
+        for(int j = 0; j < y_base; j++) {
+            int lx = i * x_step, rx = std::min((i + 1) * x_step, scene.width);
+            int ly = j * y_step, ry = std::min((j + 1) * y_step, scene.height);
+            thd[con] = std::thread(deal, lx, rx, ly, ry);
+            con++;
+        }
     }
+    for(int i = 0; i < x_base * y_base; i++) thd[i].join();
+
     UpdateProgress(1.f);
 
     // save framebuffer to file
