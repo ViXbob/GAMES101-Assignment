@@ -5,6 +5,7 @@
 #ifndef RAYTRACING_RAY_H
 #define RAYTRACING_RAY_H
 #include "Vector.hpp"
+#include <array>
 struct Ray{
     //Destination = origin + t*direction
     Vector3f origin;

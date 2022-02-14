@@ -5,6 +5,7 @@
 #pragma once
 
 #include <vector>
+#include <optional>
 #include "Vector.hpp"
 #include "Object.hpp"
 #include "Light.hpp"
