@@ -85,7 +85,7 @@ Vector3f Scene::castRay(const Ray &ray, int depth) const
         // epsilon should not be too small, 
         // otherwise it will lead to misjudgment that there is occlusion between the light source and the object
         // epsilon is set 0.01
-        if((mid.coords - light_p).norm() < 0.01) {
+        if((mid.coords - light_p).norm() < EPSILON) {
             float dist2 = dotProduct((light_p - p), (light_p - p));
             L_dir = x_prime.emit * x.m->eval(wi, wo, normal) * dotProduct(wi, normal) * dotProduct(-wi, light_normal) / (dist2 * pdf_light);
         }
